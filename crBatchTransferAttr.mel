@@ -1,0 +1,160 @@
+/* ******************************* 
+******************************* 
+
+Batch Tranfer Attributes 1.0
+
+Created On June 15th 2009
+Authored By - Crunk AKA Savio Fernandes
+
+Install & Execute:
+-Copy this file to your maya default script directory
+-Source "crBatchTransferAttr.mel"
+
+******************************* 
+CONTACT
+
+www.artbycrunk.com/blog
+artbycrunk@gmail.com
+********************************** */
+
+global proc crBatchTransferAttr()
+{
+	if (`window -q -ex crBTAWin`) deleteUI crBTAWin; 
+	window -title "crBatchTransferAttributes 1.0" -wh 301 205 -s 1 crBTAWin ;
+	
+	columnLayout -adjustableColumn true;
+		separator;separator;
+	rowColumnLayout -nc 2 -cw 1 250 -cw 2 40 MainRow;
+		textFieldGrp -l "Source Mesh:" -cw2 86 160 source_field;
+		button -l "Load" -c("crLoadMeshes(1)") sourceLoad_Butt;
+		setParent.. ;
+		separator;separator;
+	rowColumnLayout -nc 4 -cw 1 86 -cw 2 160 -cw 3 4 -cw 4 40 MainRow2;
+		text -l "  Target Meshes:" target_text;
+		textScrollList -numberOfRows 8 targetScroll_field;
+		text -l "" dummy_text1;
+		button -l "Load" -w 30 -c("crLoadMeshes(2)") TargetLoad_Butt;
+		setParent.. ;
+		separator;separator;
+	rowColumnLayout -nc 2 -cw 1 86 -cw 2 204 MainRow3;
+		button -l "Options" -h 30 -c("crBTAOptionsWin") options_Butt;
+		button -l "Transfer Attributes" -h 30 -c("crTransferAttr") transfer_Butt;
+		setParent.. ;
+		separator;separator;
+		
+	window -e -wh 301 205 crBTAWin ;
+	showWindow crBTAWin;
+
+}
+
+global proc crLoadMeshes(int $mode){
+
+	string $Objects[] = `ls -sl`;
+	if($mode == 1){
+		if (size($Objects) == 1){textFieldGrp -e -tx $Objects[0] source_field;
+		}else{error "Select a single Mesh as a Source Mesh";}
+	}
+	if($mode == 2){
+		textScrollList -e -ra targetScroll_field ;
+		for($Object in $Objects){
+			textScrollList -e -a $Object targetScroll_field ;
+		}
+	}
+	
+}
+
+global proc crBTAOptionsWin()
+{
+	if (`window -q -ex crBTAOptionsWin`) deleteUI crBTAOptionsWin; 
+	window -title "crBatchTransferAttributes Options 1.0" -wh 566 251 -s 1 crBTAOptionsWin ;
+	
+	columnLayout -adjustableColumn true;
+		separator;separator;
+			text -l "Attributes To Transfer:" AttrTrans_text;
+		separator;separator;
+			radioButtonGrp -numberOfRadioButtons 2 -label "Vertex Position" -labelArray2 Off On crBTAtransferAttributesPositionsMenu;
+			radioButtonGrp -numberOfRadioButtons 2 -label "Vertex Normal" -labelArray2 Off On crBTAtransferAttributesNormalsMenu;
+				radioButtonGrp -numberOfRadioButtons 3 -label "UV Sets" -labelArray3 Off Current All 
+				-onCommand1 "radioButtonGrp -e -enable 0 crBTAtransferAttributesFlipUVsMenu"
+				-onCommand2 "radioButtonGrp -e -enable 1 crBTAtransferAttributesFlipUVsMenu"
+				-onCommand3 "radioButtonGrp -e -enable 1 crBTAtransferAttributesFlipUVsMenu"
+				crBTAtransferAttributesUVSetMenu;
+			radioButtonGrp -numberOfRadioButtons 3 -label "Color Sets" -labelArray3 Off Current All 
+				-onCommand1 "radioButtonGrp -e -enable 0 crBTAtransferAttributesColorBordersMenu"
+				-onCommand2 "radioButtonGrp -e -enable 1 crBTAtransferAttributesColorBordersMenu"
+				-onCommand3 "radioButtonGrp -e -enable 1 crBTAtransferAttributesColorBordersMenu"
+				crBTAtransferAttributesColorSetMenu;
+		separator;separator;
+			text -l "Attribute Settings:" AttrSettings_text;
+		separator;separator;
+			radioButtonGrp -numberOfRadioButtons 4 -label "Sample Space" -labelArray4 World Local UV Component crBTAtransferAttributesSpaceMenu;
+			radioButtonGrp -numberOfRadioButtons 4 -label "Mirroring" -labelArray4 Off X Y Z crBTAtransferAttributesMirroringMenu;
+			radioButtonGrp -numberOfRadioButtons 3 -label "Flip UVs" -labelArray3 Off U V crBTAtransferAttributesFlipUVsMenu;
+			radioButtonGrp -numberOfRadioButtons 2 -label "Color Borders" -labelArray2 Ignore Preserve crBTAtransferAttributesColorBordersMenu;
+		separator;separator;
+	rowColumnLayout -nc 3 -cw 1 185 -cw 2 185 -cw 3 185 ButtonMainRow;
+		button -l "Apply" -h 30 -c("crBTAOptionsVars(2)") TargetLoad_Butt1;
+		button -l "Reset" -h 30 -c("crBTAOptionsVars(3)") TargetLoad_Butt2;
+		button -l "Close" -h 30 -c("deleteUI crBTAOptionsWin") TargetLoad_Butt3;
+		
+	window -e -wh 566 251 crBTAOptionsWin ;	
+	crBTAOptionsVars(1);
+	showWindow crBTAOptionsWin;
+}
+
+global proc crBTAOptionsVars(int $mode)
+{
+	string $OptionArray[] = {"crBTAtransferAttributesPositionsOption","crBTAtransferAttributesNormalsOption","crBTAtransferAttributesUVSetsOption","crBTAtransferAttributesColorSetsOption",
+							 "crBTAtransferAttributesSpaceOption","crBTAtransferAttributesMirrorOption","crBTAtransferAttributesFlipUVsOption","crBTAtransferAttributesColorBordersOption"};
+	string $MenuArray[] = {"crBTAtransferAttributesPositionsMenu","crBTAtransferAttributesNormalsMenu","crBTAtransferAttributesUVSetMenu","crBTAtransferAttributesColorSetMenu",
+						   "crBTAtransferAttributesSpaceMenu","crBTAtransferAttributesMirroringMenu","crBTAtransferAttributesFlipUVsMenu","crBTAtransferAttributesColorBordersMenu"};
+	int $ValuesArray[] = {1,1,3,3,1,1,1,2};
+	
+	for($r = 0; $r<size($OptionArray); $r++){
+	
+	if (`optionVar -ex $OptionArray[$r]` == 0){
+	optionVar -intValue $OptionArray[$r] $ValuesArray[$r];
+	print "exists";
+	}
+	if ($mode == 1) { radioButtonGrp -e -select `optionVar -q $OptionArray[$r]` $MenuArray[$r]; }
+	if ($mode == 2) { optionVar -intValue $OptionArray[$r] `radioButtonGrp -q -select $MenuArray[$r]`;}
+	if ($mode == 3)
+		{	
+		optionVar -intValue $OptionArray[$r] $ValuesArray[$r];
+		radioButtonGrp -e -select `optionVar -q $OptionArray[$r]` $MenuArray[$r];
+		radioButtonGrp -e -enable 1 crBTAtransferAttributesFlipUVsMenu;
+		radioButtonGrp -e -enable 1 crBTAtransferAttributesColorBordersMenu;
+		}		
+	}
+	if ($mode == 2 || $mode == 3){
+		if (`radioButtonGrp -q -select crBTAtransferAttributesUVSetMenu` == 1) 
+			radioButtonGrp -e -enable 0 crBTAtransferAttributesFlipUVsMenu;
+		if (`radioButtonGrp -q -select crBTAtransferAttributesColorSetMenu` == 1) 
+			radioButtonGrp -e -enable 0 crBTAtransferAttributesColorBordersMenu;
+		}
+	if ($mode == 2){deleteUI crBTAOptionsWin;}
+
+}
+
+global proc crTransferAttr(){
+
+	$AllListedObjects = `textScrollList -q -ai targetScroll_field`;
+	$sourceObject = `textFieldGrp -q -tx source_field`;
+	crBTAOptionsVars(0);
+	
+	for($ListObject in $AllListedObjects){
+		transferAttributes  
+		-pos (`optionVar -q crBTAtransferAttributesPositionsOption`-1)  
+		-nml (`optionVar -q crBTAtransferAttributesNormalsOption`-1)    
+		-uvs (`optionVar -q crBTAtransferAttributesUVSetsOption`-1)    
+		-col (`optionVar -q crBTAtransferAttributesColorSetsOption`-1)   
+		-spa (`optionVar -q crBTAtransferAttributesSpaceOption`)    
+		-sus map1  
+		-tus map1  
+		-fuv (`optionVar -q crBTAtransferAttributesFlipUVsOption`-1)   
+		-clb (`optionVar -q crBTAtransferAttributesColorBordersOption`-1)   
+		$sourceObject $ListObject;
+	}
+}
+
+crBatchTransferAttr();
