@@ -1,4 +1,10 @@
 # maya-crBatchTransferAttr
+
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
+[![](https://img.shields.io/badge/TWITTER-%40artbycrunk-blue.svg?logo=twitter&style=flat)](https://twitter.com/artbycrunk)
+[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/artbycrunk/maya-crBatchTransferAttr.svg)](https://isitmaintained.com/project/artbycrunk/maya-crBatchTransferAttr "Average time to resolve an issue")
+[![Percentage of issues still open](https://isitmaintained.com/badge/open/artbycrunk/maya-crBatchTransferAttr.svg)](https://isitmaintained.com/project/artbycrunk/maya-crBatchTransferAttr "Percentage of issues still open")
+
 A useful little script for using Transfer Attributes on multiple meshes.
 
 ![crBTranferAttr_screen01][crBTranferAttr_screen01]
